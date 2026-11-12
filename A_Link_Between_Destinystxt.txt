@@ -1,0 +1,384 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>A Link Between Destiny’s</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:#10140f;color:#e8f0d0;font:12px monospace;touch-action:none;user-select:none}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+canvas{width:min(100vw,calc((100vh - 260px)*1.25));max-width:720px;image-rendering:pixelated}
+#ctl{display:flex;justify-content:space-between;align-items:center;width:min(100vw,360px);padding:0 14px;box-sizing:border-box}
+#pad{display:grid;grid-template:repeat(3,48px)/repeat(3,48px);gap:2px}
+b{display:flex;align-items:center;justify-content:center;background:#2a3a22;border:2px solid #4c6a3a;border-radius:10px;font-size:18px}
+b:active{background:#4c6a3a}
+[data-k=up]{grid-area:1/2}[data-k=left]{grid-area:2/1}[data-k=right]{grid-area:2/3}[data-k=down]{grid-area:3/2}
+#ba{width:76px;height:76px;border-radius:50%;font-size:26px;background:#7a2a2a;border-color:#c04a4a}#bb{width:50px;height:50px;border-radius:50%;font-size:22px;background:#2a4a7a;border-color:#4a7ac0}
+#oc{display:flex;flex-wrap:wrap;gap:3px;width:min(100vw,360px);padding:0 14px;box-sizing:border-box;visibility:hidden}#oc b{flex:1;height:38px;font-size:11px;border-radius:8px;min-width:28px}
+#lv{flex:1 1 100%!important;height:30px!important;background:#3a3520;border-color:#8a7a3a}
+#lv.on{background:#8a7a2a;color:#fff8c0}
+</style></head><body>
+<canvas id="c" width="240" height="192"></canvas>
+<div id="oc"><b data-k="n0">Dó</b><b data-k="n1">Ré</b><b data-k="n2">Mi</b><b data-k="n3">Fá</b><b data-k="n4">Sol</b><b data-k="n5">Lá</b><b data-k="n6">Si</b><b data-k="n7">Dó</b><b id="lv" data-k="livre">Livre</b></div>
+<div id="ctl"><div id="pad"><b data-k="up">▲</b><b data-k="left">◀</b><b data-k="right">▶</b><b data-k="down">▼</b></div><b id="bb" data-k="B">♪</b><b id="ba" data-k="A">A</b></div>
+<script>
+const C=document.getElementById('c'),g=C.getContext('2d'),T=16,W=15,H=11,OY=16;
+const R=(c,x,y,w,h)=>{g.fillStyle=c;g.fillRect(x|0,y|0,w,h)};
+const ov=(a,b,c,d,e,f,h,i)=>a<e+h&&e<a+c&&b<f+i&&f<b+d;
+const TH=[['#6f7a68','#4b5060','#5c665a'],['#2f7a3a','#1d6a2e','#256b30'],['#5dac4a','#2c8a3c','#4a9a3a'],['#82b85c','#2c8a3c','#6aa148'],['#7c7f96','#55587a','#6a6d86'],['#3b2f4d','#241a33','#4a3d60'],['#d8b970','#a8873a','#c4a45a'],['#dfe8f0','#8fb0d0','#c4d4e4'],['#4a1f1a','#7a2a1a','#6a2a20'],['#2f5a48','#1a3a2c','#264a3a'],['#3a6a8a','#1f4a6a','#2f5a7a'],['#3a3a44','#24242c','#30303a'],['#8a9ab0','#5a6a84','#7a8aa0'],['#e8d890','#a08030','#d0b860'],['#6aaa4a','#3d7a28','#5a9a38'],['#3a8aaa','#1a5a7a','#2a7a9a']];
+const D=[
+['Ruínas do Sono',0,{r:18},[[1,1,2,2],[12,1,2,2],[4,2,2,1],[9,2,2,1],[2,4,1,2],[12,4,1,2],[5,5,5,1],[3,7,2,2],[10,7,2,2],[6,3,3,1]],[['n',7,8,'#a08060','#603010',["As ruínas antigas... algo dorme nas profundezas.","A ocarina está numa caverna ao leste. Cuidado com os monstros."]],['e',3,3],['e',11,3],['e',4,8],['e',10,8],['c',1,9,'r2']]],
+['Bosque Faron',1,{l:19,r:2},[[2,2,2,2],[2,7,3,2],[6,2,1,1],[9,7,2,2],[11,2,3,1],[11,6,3,1]],[['n',5,5,'#7fd06a','#2f9a3a',["Sou um Kolog! A Espada dorme num baú no canto leste da clareira.","Sem ela, os monstros do Campo vão te devorar.","A Canção de Saria: Fá Lá Si (2x) ou a completa."]],['e',8,3],['e',9,8],['c',12,4,'sword'],['c',2,9,'r2']]],
+['Campo de Hyrule',2,{l:1,d:3,u:4,r:14},[[2,2,2,1],[10,2,3,1],[2,8,2,2],[6,4,3,2,'~'],[12,7,2,2]],[['n',3,4,'#d9794a','#c04a2a',["Os monstros tomaram o Campo! O Selo Real caiu num baú no sudeste.","Norte: Castelo. Sul: Kakariko. Leste: Lago Hylia."]],['e',4,3],['e',10,4],['e',8,8],['e',11,6],['e',3,7],['c',12,9,'key']]],
+['Vila Kakariko',3,{u:2,r:17},[[1,1,3,1,'H'],[1,2,1,1,'h'],[2,2,1,1,'d'],[3,2,1,1,'h'],[9,1,4,1,'H'],[9,2,4,1,'h'],[7,1,1,9,','],[1,6,3,1,'H'],[1,7,1,1,'h'],[2,7,1,1,'d'],[3,7,1,1,'h'],[11,6,3,1,'H'],[11,7,3,1,'h']],[['n',11,3,'#a050c0','#e8e8e8','S'],['n',5,4,'#d0a030','#704010',["Dizem que o herói do céu dormiu 100 anos... será você?","Aqui eu só vejo um velho de 113 anos de chapéu verde!","Ao leste fica o Templo do Tempo."]],['n',4,9,'#c04080','#202020','P'],['c',13,9,'r1']]],
+['Portão do Castelo',4,{d:2,u:6},[[6,1,1,1],[8,1,1,1],[1,1,4,2],[10,1,4,2],[3,6,2,2],[10,6,2,2],[7,2,1,9,',']]],
+['Salão de Ganomisgan',5,{d:13},[[3,3,1,1],[11,3,1,1],[3,7,1,1],[11,7,1,1],[7,1,1,9,',']]],
+['Deserto de Gerudo',6,{d:4,u:7},[[2,2,2,2],[10,2,3,2],[4,6,2,2],[9,6,2,2],[1,8,2,1]],[['n',6,5,'#e0b060','#a07030',["Viajante... o deserto engole os distraídos.","Aperte B para tocar a Ocarina. Teclas 1-8.","O botão Livre deixa você ensaiar sem ativar magia."]],['e',3,5],['e',11,4],['e',8,8],['c',13,8,'r3']]],
+['Montanha Gelada',7,{d:6,u:8},[[2,2,3,2],[10,2,2,2],[6,4,3,1,'~'],[3,7,2,2],[11,7,2,2]],[['n',7,6,'#c8e8ff','#5a8ab0',["Brrr! Dizem que o céu chora logo ao norte.","Use a Canção da Cura (Dó Mi Sol Mi Dó) se estiver ferido."]],['e',4,5],['e',10,5],['e',5,7],['e',10,7],['c',12,5,'h1']]],
+['Floresta da Chuva',9,{d:7,u:9,w:1},[[2,2,1,2],[12,2,1,2],[4,4,2,2],[9,4,2,2],[3,8,2,1],[10,8,2,1]],[['n',7,5,'#4a6a9a','#2a3a6a','R'],['e',3,6],['e',11,6],['e',5,2],['e',10,2],['c',13,6,'r4']]],
+['Vulcão do Mal',8,{d:8,u:10},[[3,2,2,2],[10,2,2,2],[6,4,3,2],[2,6,2,2],[12,6,1,2],[5,8,1,1],[9,8,1,1]],[['n',12,9,'#a04a2a','#602010',["Sou um Goron! Aqui esquenta, mas o Sábio do Destino está perto.","Cuidado: o chefe final se cura e mira à frente de você. O escudo ajuda."]],['e',4,4],['e',11,4],['e',4,8],['e',10,7],['e',7,7],['c',2,9,'r5']]],
+['Templo da Água',10,{d:9,u:11},[[2,3,3,1,'~'],[6,2,3,1,'~'],[10,4,3,3,'~'],[2,6,2,3,'~'],[5,6,2,1],[8,8,2,1]],[['n',4,8,'#3a8aca','#1a4a8a',["Este templo guarda as lágrimas da deusa.","A Ocarina responde a quem tem coragem."]],['e',4,5],['e',9,3],['e',7,6],['e',12,8],['c',13,2,'h2']]],
+['Cemitério Sombrio',11,{d:10,u:12},[[2,2,1,1],[4,2,1,1],[2,4,1,1],[4,4,1,1],[10,2,1,1],[12,2,1,1],[10,4,1,1],[12,4,1,1],[3,7,1,1],[11,7,1,1]],[['n',7,8,'#c0c0e0','#8080c0',["Uuuuh... eu era um herói como você.","O Sábio aguarda mais adiante. Prepare o coração."]],['e',3,3],['e',11,3],['e',7,5],['e',3,8],['e',11,8],['c',13,9,'r6']]],
+['Torre dos Ventos',12,{d:11,u:13},[[1,1,2,3],[12,1,2,3],[5,3,1,1],[9,3,1,1],[5,7,1,1],[9,7,1,1],[1,7,2,2],[12,7,2,2]],[['n',7,5,'#80c0a0','#406050',["O vento sussurra: a última prova está logo acima.","Lá você aprenderá a Canção do Destino."]],['e',3,5],['e',11,5],['e',7,2],['e',4,8],['e',10,8],['c',13,5,'h3']]],
+['Santuário do Destino',13,{d:12,u:5},[[3,2,1,4],[11,2,1,4],[5,1,1,1],[9,1,1,1],[2,8,2,1],[11,8,2,1]],[['n',7,4,'#f0e8a0','#ffffff','T'],['e',4,7],['e',10,7]]],
+['Lago Hylia',10,{l:2,u:15,d:16},[[2,2,5,3,'~'],[9,1,4,3,'~'],[4,6,7,3,'~'],[1,8,2,1]],[['n',12,8,'#c09050','#804020',["Pesco neste lago desde a Era do Céu.","Norte: Domínio Zora. Sul: Rancho Lon Lon."]],['e',3,5],['e',10,5],['e',7,4],['c',13,9,'r7']]],
+['Domínio Zora',15,{d:14},[[1,1,3,4,'~'],[11,1,3,4,'~'],[5,2,5,2,'~'],[3,7,2,1],[10,7,2,1]],[['n',7,5,'#40c0d0','#e8ffff',["As águas lembram a voz da Princesa.","Leve este coração. Ganomisgan não espera misericórdia."]],['e',3,6],['e',11,6],['c',13,8,'h4']]],
+['Rancho Lon Lon',14,{u:14},[[2,1,4,2],[2,3,4,1,'h'],[9,2,4,2],[3,6,3,2],[10,6,2,2]],[['n',7,4,'#f0c070','#d080a0',["Sou Malon! Um dia uma égua chamada Epona viverá aqui.","A canção dela: Dó Lá Sol (2x) ou completa."]],['e',4,8],['e',11,8],['c',1,9,'r8']]],
+['Templo do Tempo',4,{l:3},[[3,1,1,4],[11,1,1,4],[6,1,3,1],[7,3,1,5,','],[2,8,2,1],[11,8,2,1]],[['n',7,2,'#c0c0e8','#303050','Y'],['c',12,8,'shd'],['e',4,6],['e',10,6]]],
+['Caverna Profunda',11,{l:0,r:19,d:27},[[1,1,2,2],[12,1,2,2],[4,1,1,3],[10,1,1,3],[2,4,2,1],[11,4,2,1],[5,3,5,1],[1,6,2,2],[12,6,2,2],[3,8,2,1],[10,8,2,1],[6,5,1,3],[8,5,1,3],[4,7,1,1],[9,7,1,1]],[['n',7,2,'#808080','#404040',["Esta caverna é enorme e escura...","Um galho útil está num baú por aqui. A Ocarina fica mais adiante, na clareira."]],['e',3,5],['e',11,5],['c',2,9,'stick'],['c',12,8,'r9']]],
+['Clareira Secreta',1,{l:18,r:1},[[2,2,1,1],[12,2,1,1],[4,3,2,2],[9,3,2,2],[6,6,3,2],[3,8,2,1],[10,8,2,1]],[['n',7,5,'#90c070','#406030','Q1'],['e',3,4],['e',11,4],['c',1,9,'r2'],['c',13,2,'oca']]],
+['Trilha do Vale',2,{l:20,r:21},[[3,2,2,2],[10,2,2,2],[1,5,2,1],[12,5,2,1],[5,4,5,1],[4,7,2,2],[9,7,2,2]],[['n',7,3,'#c0a080','#806040',["Este vale leva ao Campo. Mas há um atalho secreto ao norte se você tiver a canção certa..."]],['e',4,5],['e',10,5],['e',6,8],['e',8,8],['c',12,9,'r3']]],
+['Ponte Quebrada',6,{l:19,r:2,u:22},[[2,1,2,2],[11,1,2,2],[6,3,3,1,'~'],[1,6,3,2],[11,6,3,2],[5,8,5,1]],[['n',7,5,'#a09070','#605040',["A ponte caiu! Só quem tem coragem (e a espada) passa.","Side quest: mate todos os monstros daqui e eu te dou um frasco."]],['e',3,3],['e',11,3],['e',4,7],['e',10,7],['e',7,8]]],
+['Ruínas Antigas',0,{d:21,r:23},[[2,2,1,3],[12,2,1,3],[5,1,5,1],[3,5,2,1],[10,5,2,1],[6,7,3,2]],[['n',7,4,'#b0a090','#706050',["Ruínas de uma era passada. Dizem que um herói deixou algo escondido."]],['e',4,3],['e',10,3],['e',3,8],['e',11,8],['c',13,9,'h1']]],
+['Passagem Secreta',5,{l:22,u:24},[[4,1,7,1],[2,3,2,2],[11,3,2,2],[6,5,3,1],[3,7,2,2],[10,7,2,2]],[['n',7,3,'#708090','#405060',["Você encontrou o caminho secreto! Continue para o norte."]],['e',4,5],['e',10,5],['e',5,8],['e',9,8]]],
+['Mirante do Vento',12,{d:23,r:25},[[1,2,2,2],[12,2,2,2],[5,1,5,1],[3,5,1,2],[11,5,1,2],[6,7,3,2]],[['n',7,4,'#90b0c0','#507080',["Do alto se vê o Castelo... e a sombra de Ganomisgan."]],['e',3,3],['e',11,3],['e',4,8],['e',10,8],['c',1,9,'r4']]],
+['Bosque Profundo',1,{l:24,r:26},[[2,1,2,3],[11,1,2,3],[5,3,5,1],[3,6,2,2],[10,6,2,2],[6,8,3,1]],[['n',7,5,'#50a050','#306030',["Kologs escondem tesouros. Mate 5 monstros no total e volte para uma recompensa especial."]],['e',4,2],['e',10,2],['e',3,7],['e',11,7],['e',7,4],['c',13,8,'r5']]],
+['Clareira dos Espíritos',3,{l:25,d:2},[[3,2,2,2],[10,2,2,2],[6,1,3,1],[1,5,2,2],[12,5,2,2],[5,7,5,2]],[['n',7,4,'#e0d0a0','#a09060','Q2'],['e',4,6],['e',10,6],['c',2,9,'h2'],['c',12,2,'r6']]],
+['Galeria Escura',11,{u:18,r:28},[[2,1,3,2],[10,1,3,2],[1,4,2,3],[12,4,2,3],[5,3,5,1],[4,6,2,2],[9,6,2,2],[6,8,3,1],[3,2,1,1],[11,2,1,1]],[['n',7,5,'#606070','#303040',["Mais fundo na caverna... Dizem que há um baú enterrado em algum lugar por aqui."]],['e',4,4],['e',10,8],['c',13,2,'r3']]],
+['Câmara Oculta',5,{l:27},[[3,2,2,3],[10,2,2,3],[6,1,3,1],[1,6,3,2],[11,6,3,2],[5,5,5,1],[7,8,1,1]],[['n',7,4,'#a09080','#605040','Q3'],['e',4,7],['c',12,8,'buried'],['c',2,2,'r4']]],
+['Planície Ventosa',2,{l:2,r:30,u:31},[[2,2,3,1],[10,2,3,1],[1,5,2,2],[12,5,2,2],[5,4,5,1],[4,7,2,2],[9,7,2,2]],[['n',7,3,'#c0b080','#807050',["Os ventos daqui carregam segredos antigos.","Toque a Canção do Vento para viajar mais rápido."]],['e',3,6],['e',11,6],['e',6,8],['c',13,9,'r5']]],
+['Colinas Antigas',6,{d:29,u:32},[[3,1,2,2],[10,1,2,2],[1,4,3,2],[11,4,3,2],[5,6,5,1],[4,8,2,1],[9,8,2,1]],[['n',7,5,'#a09070','#605040',["Nestas colinas há pedras que escondem baús.","Use a Canção da Revelação."]],['e',4,3],['e',10,3],['e',5,7],['c',1,9,'h1']]],
+['Floresta Perdida',1,{d:29,r:33},[[2,1,1,3],[12,1,1,3],[5,2,5,1],[3,5,2,2],[10,5,2,2],[6,8,3,1]],[['n',7,4,'#60a060','#306030',["Muitos se perdem aqui... a Canção de Saria ajuda a encontrar o caminho."]],['e',4,2],['e',10,2],['e',3,7],['e',11,7],['c',13,8,'r6']]],
+['Lago Sagrado',10,{l:30,d:34},[[2,2,4,3,'~'],[9,2,4,3,'~'],[4,6,7,2,'~'],[1,8,2,1],[12,8,2,1]],[['n',7,5,'#40a0c0','#206080',["As águas sagradas restauram a alma.","Toque a Canção da Vida perto da água."]],['e',3,4],['e',11,4],['c',12,9,'h2']]],
+['Torre Abandonada',11,{u:31,d:35},[[3,1,2,3],[10,1,2,3],[6,2,3,1],[1,5,2,2],[12,5,2,2],[5,7,5,2]],[['n',7,4,'#808090','#404050',["Uma torre esquecida. O vento sopra forte no topo."]],['e',4,6],['e',10,6],['e',7,8],['c',2,9,'r7']]],
+['Caverna de Cristal',15,{l:32,r:36},[[1,1,2,3],[12,1,2,3],[4,2,2,1],[9,2,2,1],[6,4,3,2],[2,7,3,1],[10,7,3,1]],[['n',7,6,'#a0c0e0','#6080a0',["Cristais brilham quando a Canção da Luz é tocada."]],['e',3,3],['e',11,3],['e',5,8],['c',13,5,'h3']]],
+['Vale Sombrio',9,{u:33,d:37},[[2,2,2,2],[11,2,2,2],[5,1,5,1],[1,5,3,2],[11,5,3,2],[6,8,3,1]],[['n',7,4,'#605070','#302040',["Sombra e silêncio... a Canção da Sombra paralisa os que espreitam."]],['e',4,3],['e',10,3],['e',3,7],['e',11,7],['c',1,9,'r8']]],
+['Templo Esquecido',4,{l:34,u:38},[[3,1,1,4],[11,1,1,4],[6,1,3,1],[7,3,1,5,','],[2,8,2,1],[11,8,2,1]],[['n',7,2,'#c0b0a0','#807060',["Este templo guarda o conhecimento das canções antigas."]],['e',4,6],['e',10,6],['c',12,8,'r9']]],
+['Pico Gelado',7,{d:35,r:39},[[2,2,3,2],[10,2,2,2],[6,4,3,1,'~'],[3,7,2,2],[11,7,2,2]],[['n',7,6,'#d0e8ff','#70a0c0',["O frio corta a pele. A Canção da Proteção ajuda."]],['e',4,5],['e',10,5],['e',5,8],['c',12,3,'h4']]],
+['Altar das Deusas',13,{l:36,d:5},[[3,2,1,3],[11,2,1,3],[5,1,5,1],[2,6,3,2],[10,6,3,2],[6,8,3,1]],[['n',7,4,'#f0e8c0','#c0a060',["Aqui as deusas ouvem as canções. Toque a Canção do Destino quando estiver pronto."]],['e',4,5],['e',10,5],['c',13,9,'h1']]],
+['Campo Norte',2,{d:2,u:43,r:40,l:41},[[2,2,2,1],[10,2,3,1],[4,4,7,2,'~'],[1,7,3,2],[11,7,3,2]],[['n',7,3,'#d0a060','#a07030',["O grande Campo de Hyrule se estende em todas as direções. Explore livremente."]],['e',3,5],['e',11,5],['e2',5,8],['e2',9,8],['c',13,2,'r3']]],
+['Campo Leste',2,{l:39,r:44,u:45},[[1,2,2,2],[12,2,2,2],[5,1,5,1],[3,5,2,2],[10,5,2,2],[6,8,3,1]],[['e',4,3],['e',10,3],['e2',7,6],['e3',3,8],['c',1,9,'r4']]],
+['Campo Oeste',2,{r:39,l:46,d:47},[[2,1,3,2],[10,1,3,2],[1,5,2,2],[12,5,2,2],[5,7,5,2]],[['e',4,4],['e',10,4],['e2',6,8],['c',13,9,'h1']]],
+['Campo Sul Extenso',2,{u:39,d:3,l:48,r:49},[[3,2,2,2],[10,2,2,2],[1,5,3,1],[11,5,3,1],[5,7,5,2]],[['e',4,4],['e2',10,4],['e3',7,8],['c',2,9,'r5']]],
+['Bosque Denso',1,{l:40,r:50,u:51},[[2,1,1,4],[12,1,1,4],[5,2,5,1],[3,5,2,2],[10,5,2,2],[6,8,3,1]],[['e',4,3],['e2',10,3],['e',5,7],['e2',9,7],['c',13,5,'r6']]],
+['Clareira dos Kologs',1,{d:41,r:52},[[3,2,2,2],[10,2,2,2],[6,1,3,1],[1,5,2,3],[12,5,2,3]],[['n',7,4,'#70c070','#306030',["Os Kologs guardam segredos da floresta. Explore todos os caminhos."]],['e2',4,6],['e2',10,6],['c',2,9,'h2']]],
+['Deserto Exterior',6,{r:42,u:53,d:54},[[2,2,3,2],[10,2,2,2],[5,5,5,1],[1,7,3,2],[11,7,3,2]],[['e3',3,4],['e3',11,4],['e',7,8],['c',13,2,'r7']]],
+['Oásis Escondido',6,{d:43,l:55},[[4,2,7,2,'~'],[2,5,2,2],[11,5,2,2],[5,8,5,1]],[['n',7,4,'#e0c080','#a08040',["Um oásis no deserto. Descanse aqui."]],['e2',3,6],['e2',11,6],['c',1,9,'h1']]],
+['Montanha Base',7,{d:44,u:56},[[2,2,2,2],[11,2,2,2],[5,4,5,1],[3,7,2,2],[10,7,2,2]],[['e',4,3],['e3',10,3],['e2',7,8],['c',13,5,'r8']]],
+['Trilha Congelada',7,{d:45,r:57},[[1,2,2,3],[12,2,2,3],[5,1,5,1],[4,6,2,2],[9,6,2,2]],[['e3',3,5],['e3',11,5],['e4',7,8],['c',2,9,'h2']]],
+['Rio Hylia Norte',10,{d:14,u:58,r:59},[[2,2,5,3,'~'],[9,1,4,3,'~'],[1,7,3,2],[11,7,3,2]],[['e',4,5],['e2',10,5],['c',13,9,'r3']]],
+['Costa de Hyrule',10,{l:48,u:60},[[1,3,4,3,'~'],[8,2,5,3,'~'],[3,7,3,2],[10,7,3,2]],[['e2',5,5],['e3',11,6],['c',2,9,'r4']]],
+['Templo da Chama',8,{d:49,u:52},[[2,1,2,2],[11,1,2,2],[5,3,5,2],[1,6,3,2],[11,6,3,2],[6,8,3,1]],[['n',7,2,'#c05020','#802010',["Templo da Chama. O guardião do fogo aguarda no altar."]],['e2',3,4],['e2',11,4],['e4',4,7],['e4',10,7],['MB',7,5]]],
+['Templo da Chama - Altar',8,{d:51},[[3,2,2,3],[10,2,2,3],[6,1,3,1],[1,6,3,2],[11,6,3,2]],[['MB',7,4],['e4',3,8],['e4',11,8],['c',13,9,'h3']]],
+['Templo da Água Profunda',10,{l:50,r:54},[[2,2,3,2,'~'],[10,2,3,2,'~'],[5,5,5,1,'~'],[1,7,3,2],[11,7,3,2]],[['n',7,3,'#3080c0','#104060',["Templo das profundezas. Cuidado com as correntes e o guardião."]],['e3',3,5],['e3',11,5],['e2',6,8],['MB',7,6]]],
+['Templo da Água - Núcleo',10,{l:53},[[3,1,2,4,'~'],[10,1,2,4,'~'],[5,4,5,2,'~'],[2,8,3,1],[10,8,3,1]],[['MB',7,3],['e3',4,7],['e3',10,7],['c',13,5,'h3']]],
+['Templo da Floresta Ancestral',1,{d:51,u:56},[[2,1,1,3],[12,1,1,3],[4,3,2,2],[9,3,2,2],[6,6,3,2],[3,8,2,1],[10,8,2,1]],[['n',7,5,'#40a040','#206020',["Templo da Floresta. As raízes antigas protegem o boss."]],['e2',3,2],['e2',11,2],['e',5,7],['e',9,7],['MB',7,4]]],
+['Templo Floresta - Coração',1,{d:55},[[3,2,2,3],[10,2,2,3],[6,1,3,1],[1,6,3,2],[11,6,3,2]],[['MB',7,4],['e2',3,8],['e2',11,8],['c',13,2,'h2']]],
+['Templo das Sombras',11,{d:52,r:58},[[2,2,1,2],[12,2,1,2],[5,1,5,1],[3,4,2,2],[10,4,2,2],[6,7,3,2]],[['n',7,6,'#504060','#201030',["Templo das Sombras. A escuridão esconde o verdadeiro perigo."]],['e4',3,3],['e4',11,3],['e3',4,8],['e3',10,8],['MB',7,5]]],
+['Templo Sombras - Abismo',11,{l:57},[[3,1,2,4],[10,1,2,4],[6,3,3,2],[1,7,3,2],[11,7,3,2]],[['MB',7,4],['e4',3,8],['e4',11,8],['c',2,2,'h3']]],
+['Templo do Gelo',7,{l:53,u:60},[[2,2,3,2],[10,2,2,2],[5,5,5,1,'~'],[1,7,3,2],[11,7,3,2]],[['n',7,3,'#b0d0e0','#6090b0',["Templo do Gelo. O frio paralisa... e o boss não espera."]],['e3',3,5],['e3',11,5],['e4',6,8],['MB',7,6]]],
+['Templo Gelo - Pico',7,{d:59},[[3,2,2,3],[10,2,2,3],[6,1,3,1],[2,7,3,2],[10,7,3,2]],[['MB',7,4],['e3',4,8],['e4',10,8],['c',13,2,'h4']]],
+['Templo do Vento',12,{d:54,r:62},[[1,2,2,3],[12,2,2,3],[5,1,5,1],[4,5,2,2],[9,5,2,2],[6,8,3,1]],[['n',7,4,'#80c0a0','#408060',["Templo do Vento. Correntes fortes e um guardião alado."]],['e2',3,3],['e2',11,3],['e',5,7],['e',9,7],['MB',7,5]]],
+['Templo Vento - Topo',12,{l:61},[[3,1,2,3],[10,1,2,3],[6,2,3,1],[1,6,3,2],[11,6,3,2]],[['MB',7,4],['e2',3,8],['e2',11,8],['c',13,9,'h3']]],
+['Templo do Espírito',13,{u:55,d:64},[[2,2,2,2],[11,2,2,2],[5,1,5,1],[3,5,2,2],[10,5,2,2],[6,8,3,1]],[['n',7,4,'#e0c0a0','#a08050',["Templo do Espírito. Aqui o tempo e a memória se misturam."]],['e',4,3],['e3',10,3],['e2',5,7],['e4',9,7],['MB',7,5]]],
+['Templo Espírito - Santuário',13,{u:63},[[3,2,2,3],[10,2,2,3],[6,1,3,1],[1,6,3,2],[11,6,3,2]],[['MB',7,4],['e4',3,8],['e4',11,8],['c',2,2,'h4']]],
+['Templo Final - Entrada',5,{d:56,u:66},[[2,1,2,3],[11,1,2,3],[5,3,5,2],[1,7,3,2],[11,7,3,2]],[['n',7,5,'#802020','#401010',["O templo mais perigoso. Só heróis completos devem entrar. O boss é extremamente forte."]],['e4',3,3],['e4',11,3],['e4',4,8],['e4',10,8],['e3',7,6]]],
+['Templo Final - Coração',5,{d:65},[[3,1,2,4],[10,1,2,4],[6,2,3,2],[1,7,3,2],[11,7,3,2]],[['MB',7,4],['e4',3,8],['e4',11,8],['e4',5,5],['e4',9,5],['c',13,2,'h4'],['c',2,9,'r9']]]
+];
+D[4][4]=[['n',7,1,'#3a4a8a','#aab','G'],['e',4,4],['e',10,4],['e',7,7],['e',5,8]];
+D[5][4]=[['n',7,1,'#e8e8ff','#f0d060','Z'],['B',6,4]];
+let S,G,ents,pj,px,py,dir,atk,dlg,fr=0,K={},title=1,endd=0,moving,AC,cs=0,crY=0;
+function unlock(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state=='suspended')AC.resume()}
+function sfx(f,t='square',d=.1,v=.08,f2){
+  unlock();
+  const o=AC.createOscillator(),gn=AC.createGain(),now=AC.currentTime;
+  o.type=t;o.frequency.setValueAtTime(Math.max(20,f),now);
+  if(f2)o.frequency.exponentialRampToValueAtTime(Math.max(20,f2),now+d);
+  gn.gain.setValueAtTime(v,now);
+  gn.gain.exponentialRampToValueAtTime(.001,now+d);
+  o.connect(gn);gn.connect(AC.destination);
+  o.start(now);o.stop(now+d);
+}
+function init(){S={map:0,hp:4,max:4,ru:0,sword:0,stick:0,oca:0,key:0,boss:0,inv:0,f:{},ban:0,sg:{},cd:0,cd2:0,lr:0,fx:0,tx:'',tt:0,shd:0,free:0,cal:0,st:0,killed:{},pow:0,inv2:0,day:1,dt:0};oc=0;ob=[];dir=0;atk=0;dlg=0;endd=0;title=1;cs=0;crY=0;mel=0;load(0,48,80);ocv()}
+function build(i){const x=D[i][2],f=D[i][3];G=[];for(let y=0;y<H;y++){G[y]=[];for(let k=0;k<W;k++)G[y][k]=(!k||!y||k==W-1||y==H-1)?'#':'.'}
+f.forEach(([a,b,w,h,c='#'])=>{for(let j=b;j<b+h;j++)for(let k=a;k<a+w;k++)if(j>=0&&j<H&&k>=0&&k<W)G[j][k]=c});
+for(let j=4;j<7;j++){if(x.l)G[j][0]='.';if(x.r)G[j][W-1]='.'}for(let k=6;k<9;k++){if(x.u)G[0][k]='.';if(x.d)G[H-1][k]='.'}}
+function load(i,x,y){S.map=i;S.ban=120;build(i);px=x;py=y;S.sp=[x,y];pj=[];ents=[];oc=0;ob=[];ocv();rain(!!wx());lpx=x;lpy=y;
+D[i][4].forEach(([k,a,b,c,h,t])=>{const e={k,x:a*T,y:b*T,inv:0,hp:2,tm:0,vx:0,vy:0};
+if(k=='c')e.id=c;if(k=='n'){e.b=c;e.h=h;e.t=t;if(t=='G'&&S.f.guard)return}if(k=='B'){if(S.boss)return;Object.assign(e,{hp:40,mx:40,sh:90,ch:0,hc:600,dc:240,wu:0,dd:0,sd:1,bk:0,s1:0,s2:0})}
+if(k=='e'||k=='e2'||k=='e3'||k=='e4'){const kid=S.map+'_'+a+'_'+b;e.kid=kid;if(S.killed[kid])return;
+if(k=='e2'){e.hp=3;e.col='#c04a8a'}if(k=='e3'){e.hp=4;e.col='#4a8ac0'}if(k=='e4'){e.hp=5;e.col='#c08a2a'}
+}
+if(k=='MB'){if(S.f['mb_'+S.map])return;Object.assign(e,{hp:20,mx:20,sh:80,ch:0,hc:400,dc:180,wu:0,dd:0,sd:1,bk:0,s1:0,s2:0,mb:1})}
+ents.push(e)})}
+function go(s){if(s=='u'&&S.map==13&&!S.sg.destino){py=2;return say(["Uma barreira sagrada te impede de passar...","Aprenda a Canção do Destino com o Sábio."])}const m=D[S.map][2][s];if(m==null){px=Math.max(0,Math.min(224,px));py=Math.max(0,Math.min(160,py));return}({r:()=>load(m,2,py),l:()=>load(m,222,py),u:()=>load(m,px,158),d:()=>load(m,px,0)})[s]()}
+const SOL='#~Hhd';
+const bl=(x,y,w,h)=>{for(const[a,b]of[[x,y],[x+w-1,y],[x,y+h-1],[x+w-1,y+h-1]]){const c=a>>4,r=b>>4;if(c>=0&&r>=0&&c<W&&r<H&&SOL.includes(G[r][c]))return 1}return 0};
+const pb=(x,y)=>bl(x+3,y+6,10,9)||ents.some(e=>(e.k=='n'||e.k=='c')&&ov(x+3,y+6,10,9,e.x+2,e.y+2,12,12));
+const say=(l,cb,o)=>{dlg={l:[].concat(l),i:0,cb,o,s:0}};
+function adv(){sfx(600,'triangle',.04,.05);const d=dlg;if(d.i<d.l.length-1){d.i++;return}dlg=0;if(d.o){d.o[d.s][1]&&d.o[d.s][1]()}else d.cb&&d.cb()}
+function edge(a){
+if(title){if(a!='A'){unlock();sq=0;sqt=1;return}title=0;sfx(523,'square',.1);say(["Muito após o servo de Ganomisgan ser derrotado na Era do Céu, o herói caiu num sono de 100 anos.","Agora, aos 113 anos, Link desperta nas Ruínas do Sono. Uma alma maligna com a essência de Ganon ressurgiu.","Explore as cavernas ao leste para achar a Ocarina do Tempo. Depois leve-a ao Castelo, derrote Ganomisgan e entregue-a à Zelda."]);return}
+if(endd){if(cs==3){cs=4;return}if(a=='A')init();return}
+if(a=='livre'){if(oc){S.free=!S.free;ocv();fl(S.free?'Modo Livre: toque à vontade, nada será ativado.':'Modo Livre desligado.')}return}
+if(a=='B'){if(S.oca){oc=!oc;ob=[];ocv()}else fl('Você ainda não tem a Ocarina. Procure nas Ruínas do Sono.');return}
+if(oc){if(a[0]=='n')note(+a[1]);else if(a=='A'){oc=0;ocv()}return}
+if(dlg){if(a=='A')adv();else if(dlg.o&&dlg.i==dlg.l.length-1){const n=dlg.o.length;if(a=='up')dlg.s=(dlg.s+n-1)%n;if(a=='down')dlg.s=(dlg.s+1)%n}return}
+if(a=='A')doA()}
+function doA(){const fx=px+8+[0,0,-12,12][dir],fy=py+8+[12,-12,0,0][dir];
+const e=ents.find(e=>(e.k=='n'||e.k=='c')&&Math.abs(e.x+8-fx)<13&&Math.abs(e.y+8-fy)<13);
+if(e)return act(e);if((S.sword||S.stick)&&!atk){atk=S.sword?16:12;sfx(S.sword?440:320,'sawtooth',.08,.08,110)}}
+function act(e){if(e.k=='c'){if(S.f[e.id])return say("O baú está vazio.");S.f[e.id]=1;
+const m={oca:["Você obteve a OCARINA DO TEMPO!","Aperte B para tocar. Teclas 1-8: Dó Ré Mi Fá Sol Lá Si Dó.","Você já sabe várias canções: Cura, Saria, Epona, Tempestade, Força, Proteção, Sol, Vento, Luz e mais.","Experimente combinações! No modo Livre você ensaia sem ativar magias."],sword:["Você obteve a ESPADA! Aperte A para atacar. Dano maior."],stick:["Você achou um GALHO!","Não é uma espada, mas serve para se defender. Aperte A para atacar (dano menor)."],key:["Você obteve o SELO REAL! O portão do castelo se abrirá."],shd:["Você obteve o ESCUDO HYLIANO!","Olhe para o golpe ou o projétil para bloqueá-lo. Fique parado para um bloqueio mais firme."],r1:["Você achou 30 rupees!"],r2:["Você achou 20 rupees!"],buried:["Você desenterrou um BAÚ ANTIGO!","Há moedas e um bilhete: 'Leve isto ao espírito da câmara'."]}[e.id]||(e.id[0]=='h'?["Você achou um FRASCO DE CORAÇÃO! +1 coração!"]:["Você achou 25 rupees!"]);
+if(e.id=='oca'){S.oca=1;S.sg.cura=1;sfx(587,'triangle',.25,.1);setTimeout(()=>sfx(880,'triangle',.25,.1),220);setTimeout(()=>sfx(987,'triangle',.45,.1),440)}
+else{sfx(523,'square',.1);setTimeout(()=>sfx(659,'square',.1),80);setTimeout(()=>sfx(784,'square',.25),160)}
+if(e.id=='sword')S.sword=1;if(e.id=='stick')S.stick=1;if(e.id=='key')S.key=1;if(e.id=='shd')S.shd=1;if(e.id=='buried')S.f.buried=1;if(e.id=='r1')S.ru+=30;if(e.id=='r2')S.ru+=20;if(/^r[3-9]$/.test(e.id))S.ru+=25;if(e.id[0]=='h'){if(S.max<12){S.max++;S.hp=S.max}else{S.ru+=20}}return say(m)}
+const t=e.t;
+if(t=='G'){if(!S.key)say(["Alto! O castelo está selado.","Só passa quem tem o Selo Real. Procure-o no Campo de Hyrule."]);else{S.f.guard=1;say("Esse é o Selo Real! Passe, herói. Que as deusas o protejam.",()=>{ents=ents.filter(x=>x!=e)})}}
+else if(t=='S'){const b=(c,f,m)=>()=>{if(S.ru<c)return say("Rupees insuficientes!");S.ru-=c;f();sfx(784,'square',.15);say(m)};
+const opts=[["Poção (15 rupees): cura tudo",b(15,()=>S.hp=S.max,"Glub glub! Vida restaurada!")],["Frasco de Coração (40): +1 coração",b(40,()=>{if(S.max>=12)return say("Já está no máximo de corações!");S.max++;S.hp=S.max},"Seu coração ficou maior!")]];
+if(!S.shd)opts.push(["Escudo (25 rupees): bloqueia à frente",b(25,()=>S.shd=1,"O Escudo Hyliano! Olhe para o golpe para bloquear.")]);
+opts.push(["Sair"]);say("Bem-vindo à Loja de Kakariko! O que vai levar?",0,opts)}
+else if(t=='P'){if(!S.f.gift){S.f.gift=1;S.ru+=20;sfx(987,'square',.1);say(["Você é o herói lendário? Pegue 20 rupees, vai precisar."])}else say("Boa sorte, herói!")}
+else if(t=='Z'){if(!S.boss)say(["Link! Cuidado, Ganomisgan está logo atrás de você!","Só a Canção do Destino o fere de verdade: aperte B e toque! O escudo segura os projéteis."]);else say("A paz voltou a este salão...")}
+else if(t=='T'){if(S.sg.destino)say("Toque a Canção do Destino diante de Ganomisgan: 15 de dano! Recarrega em 20 segundos.");else say(["Sou o Sábio do Destino. Só a Canção do Destino fere Ganomisgan de verdade.","Abra a Ocarina com B e toque: Mi Sol Si Sol Dó Si (teclas 3 5 7 5 8 7)."],()=>{S.lr='destino';oc=1;ob=[];ocv()})}
+else if(t=='R'){if(S.sg.storm)say("Toque a Canção da Tempestade completa e a chuva cairá onde você quiser!");else if(!S.oca)say("A chuva daqui canta uma melodia... Volte com uma ocarina e eu te ensino.");else say(["A chuva nunca para aqui... ela canta uma melodia.","Toque comigo a Canção da Tempestade completa: Ré Fá Dó Ré Fá Dó (teclas 2 4 8 2 4 8)."],()=>{S.lr='storm';oc=1;ob=[];ocv()})}
+else if(t=='Y'){if(S.sg.zelda)say("A Canção de Zelda acalma os monstros: Lá Dó Sol, duas vezes. Teclas 6 8 5, 6 8 5.");else if(!S.oca)say("Este altar espera uma ocarina...");else say(["Este templo aguarda o herói do tempo.","Toque a Canção de Zelda: Lá Dó Sol, duas vezes (teclas 6 8 5, 6 8 5)."],()=>{S.lr='zelda';oc=1;ob=[];ocv()})}
+else if(t=='Q1'){
+  if(S.f.q1)say("Você já me ajudou, herói. Os espíritos da floresta agradecem.");
+  else if(killedCount()>=3){S.f.q1=1;S.ru+=30;say(["Obrigado! Você derrotou os monstros.","Tome 30 rupees como recompensa."])}
+  else say(["Um espírito da floresta! Traga-me a prova de que derrotou 3 monstros.","(Mate 3 inimigos e volte)"]);
+}
+else if(t=='Q2'){
+  if(S.f.q2)say("Você já completou essa missão. Descanse, herói.");
+  else if(killedCount()>=5){S.f.q2=1;S.ru+=50;S.max++;S.hp=S.max;say(["Impressionante! Os espíritos te abençoam.","+50 rupees e +1 coração!"])}
+  else say(["Os espíritos abençoam quem derrota muitos monstros.","Mate 5 no total e volte."]);
+}
+else if(t=='Q3'){
+  if(S.f.q3)say("Você já encontrou o baú enterrado. Não há mais nada aqui para mim.");
+  else if(S.f.buried){S.f.q3=1;S.ru+=40;say(["Achou o baú enterrado! Eu sabia que você conseguiria.","Aqui, 40 rupees pela descoberta."])}
+  else say(["Há um baú enterrado nesta câmara...","Encontre-o e volte falar comigo."]);
+}
+else if(Array.isArray(t)){
+  const k=killedCount();
+  if(k>=5 && !S.f.sq5){S.f.sq5=1;S.ru+=50;S.max++;S.hp=S.max;say(["Você matou muitos monstros! Os espíritos te abençoam.","+50 rupees e +1 coração!"])}
+  else if(k>=3 && !S.f.sq3){S.f.sq3=1;S.ru+=25;say(["Bom trabalho caçando! Aqui, 25 rupees pela ajuda."])}
+  else say(t);
+}
+else say(t)}
+function face(ax,ay){const dx=ax-(px+8),dy=ay-(py+8);if(Math.abs(dx)>Math.abs(dy))return dir==(dx>0?3:2);return dir==(dy>0?0:1)}
+function block(ax,ay,proj){if(!S.shd||!face(ax,ay))return 0;if(!proj&&moving)return 0;sfx(980,'square',.06,.05,400);S.fxs=8;fl('O escudo bloqueou!');return 1}
+function hurt(fx,fy){if(block(fx,fy,0)){const a=px-fx,b=py-fy,l=Math.hypot(a,b)||1,nx=px+a/l*6,ny=py+b/l*6;if(!pb(nx,ny)){px=nx;py=ny}return}
+S.inv=60;S.hp--;sfx(150,'sawtooth',.2,.12,50);const a=px-fx,b=py-fy,l=Math.hypot(a,b)||1,nx=px+a/l*10,ny=py+b/l*10;if(!pb(nx,ny)){px=nx;py=ny}
+if(S.hp<=0)say("Você desmaiou... mas o destino ainda não terminou.",()=>{S.hp=S.max;S.ru>>=1;S.inv=90;load(S.map,S.sp[0],S.sp[1])})}
+function hitE(e,n=1){if(e.inv>0&&n<2)return;e.hp-=n;e.inv=20;if(e.ch>0){e.ch=0;e.hc=500}sfx(220,'square',.07,.08,90);
+if(e.k=='e'||e.k=='e2'||e.k=='e3'||e.k=='e4'){const a=e.x-px,b=e.y-py,l=Math.hypot(a,b)||1;if(!bl(e.x+a/l*8+2,e.y+b/l*8+4,12,10)){e.x+=a/l*8;e.y+=b/l*8}}
+if(e.hp<=0){e.dead=1;if(e.k=='e'||e.k=='e2'||e.k=='e3'||e.k=='e4'){if(e.kid)S.killed[e.kid]=1;if(Math.random()<.75)ents.push({k:'r',x:e.x,y:e.y,inv:0})}
+if(e.k=='MB'){S.f['mb_'+S.map]=1;S.ru+=50;sfx(110,'sawtooth',.5,.12,40);fl('Mini-chefe derrotado! +50 rupees')}
+if(e.k=='B'){S.boss=1;pj=[];sfx(110,'sawtooth',.6,.15,40);finale()}}}
+function finale(){
+cs=1;
+say(["Ganomisgan: Impossível... a alma de Ganon... se desfaz...","Ganomisgan: Herói adormecido... Hyrule ainda não está livre para sempre...","Ganomisgan: Mas a Ocarina... não será minha."],()=>{
+say(["Zelda: Link! Você conseguiu...","Zelda: A sombra de Ganomisgan se dissipou neste salão.","Zelda: A Ocarina do Tempo deve ficar sob guarda real, até o dia em que o herói do tempo a tocar.","Link entrega a Ocarina do Tempo à Princesa Zelda.","Zelda: Eu a guardarei. Obrigada por salvar Hyrule, Link.","Zelda: Descanse agora, herói. O destino... nos encontrará de novo."],()=>{S.oca=0;endd=1;cs=3;crY=210;sq=0;sqt=0})})}
+let oc=0,ob=[],ot=0,lpx=0,lpy=0,ms=0,mt=0,RN=0,mel=0,melN=[],melI=0,melW=0,melG=30,melCb=0,sq=0,sqt=0;
+const SG=[
+{id:'saria',n:[3,5,6,3,5,6,7,6,4,2,1,2,4,2],p:[3,5,6,3,5,6],slow:1,gap:36},
+{id:'epona',n:[7,5,4,7,5,4,7,5,4,5,4],p:[7,5,4,7,5,4],slow:1,gap:38},
+{id:'zelda',n:[5,7,4,5,7,4],p:[5,7,4],slow:1,gap:40},
+{id:'storm',n:[1,3,7,1,3,7],p:[1,3,7],slow:1,gap:34},
+{id:'destino',n:[2,4,6,4,7,6]},
+{id:'cura',n:[0,2,4,2,0]},
+{id:'tempo',n:[0,2,4,5,4,2],p:[0,2,4],slow:1,gap:32},
+{id:'sol',n:[0,2,4,7,4,2,0],p:[0,2,4],slow:1,gap:30},
+{id:'forca',n:[4,6,7,6,4,2],p:[4,6,7],slow:1,gap:28},
+{id:'protecao',n:[7,5,3,5,7],p:[7,5,3],slow:1,gap:34},
+{id:'revelar',n:[1,3,5,7,5,3,1],p:[1,3,5],slow:1,gap:30},
+{id:'vento',n:[6,4,2,4,6,7],p:[6,4,2],slow:1,gap:32},
+{id:'luz',n:[0,4,7,4,0],p:[0,4,7],slow:1,gap:36},
+{id:'sombra',n:[7,5,3,1,3,5],p:[7,5,3],slow:1,gap:30},
+{id:'vida',n:[0,2,5,7,5,2,0],p:[0,2,5],slow:1,gap:34},
+{id:'guerra',n:[0,3,5,7,5,3,0],p:[0,3,5],slow:1,gap:28}
+];
+const NN=['Dó','Ré','Mi','Fá','Sol','Lá','Si','Dó'],NF=[262,294,330,349,392,440,494,523];
+function killedCount(){return Object.keys(S.killed||{}).length}
+const SC=[[0,2,4,5,7,9,11],[0,2,3,5,7,8,10],[0,2,4,7,9],[0,1,4,5,7,8,11],[0,3,5,7,10]],PT=[[0,2,4,2,5,4,7,4],[4,2,0,2,4,7,5,4],[0,0,2,4,4,2,2,0],[7,5,4,2,4,5,7,9]];
+const TR=[
+[57,1,16,'triangle',[0,5,3,4],0],[60,0,12,'square',[0,4,5,3],1],[62,0,10,'square',[0,3,4,0],2],[65,2,14,'triangle',[0,2,4,2],3],
+[55,1,11,'sawtooth',[0,3,4,3],0],[50,1,6,'sawtooth',[0,5,3,4],2],[57,3,12,'square',[0,1,0,4],1],[72,2,18,'triangle',[0,2,3,1],3],
+[57,4,20,'triangle',[0,3,1,4],0],[45,3,8,'sawtooth',[0,1,0,5],2],[64,2,16,'sine',[0,2,4,1],1],[52,1,18,'triangle',[0,5,0,4],3],
+[67,0,9,'square',[0,4,5,2],0],[60,0,16,'triangle',[0,3,4,0],2],[62,2,14,'triangle',[0,4,2,5],1],[64,1,16,'sine',[0,5,3,0],0],
+[55,0,14,'triangle',[0,2,4,0],2],[58,1,15,'square',[0,3,5,2],1],[63,2,13,'triangle',[0,1,4,2],0],[48,3,10,'sawtooth',[0,2,0,4],2],
+[70,0,17,'sine',[0,4,3,1],3],[53,1,12,'triangle',[0,5,2,0],1],[59,2,11,'square',[0,3,1,5],0],[66,0,15,'triangle',[0,2,5,3],2],
+[51,3,9,'sawtooth',[0,1,3,4],1],[61,1,14,'sine',[0,4,0,2],3],[54,2,13,'triangle',[0,5,1,3],0]
+,[55,2,13,'triangle',[0,3,1,5],1],[62,0,15,'sine',[0,4,2,0],2],[48,1,10,'sawtooth',[0,5,3,1],0],[70,3,17,'triangle',[0,2,4,3],3],[53,0,12,'square',[0,1,5,2],1],[66,2,14,'sine',[0,3,0,4],0],[59,1,11,'triangle',[0,4,1,5],2],[47,3,9,'sawtooth',[0,2,5,0],1],[63,0,16,'triangle',[0,5,2,3],3],[51,2,13,'sine',[0,1,4,2],0],[50,0,10,'triangle',[0,1,3,2],0],[51,1,11,'square',[0,2,4,3],1],[52,2,12,'sine',[0,3,5,4],2],[53,3,13,'sawtooth',[0,4,0,5],3],[54,4,14,'triangle',[0,5,1,0],0],[55,0,15,'square',[0,0,2,1],1],[56,1,16,'sine',[0,1,3,2],2],[57,2,17,'sawtooth',[0,2,4,3],3],[58,3,10,'triangle',[0,3,5,4],0],[59,4,11,'square',[0,4,0,5],1],[60,0,12,'sine',[0,5,1,0],2],[61,1,13,'sawtooth',[0,0,2,1],3],[62,2,14,'triangle',[0,1,3,2],0],[63,3,15,'square',[0,2,4,3],1],[64,4,16,'sine',[0,3,5,4],2],[65,0,17,'sawtooth',[0,4,0,5],3],[66,1,10,'triangle',[0,5,1,0],0],[67,2,11,'square',[0,0,2,1],1],[68,3,12,'sine',[0,1,3,2],2],[69,4,13,'sawtooth',[0,2,4,3],3],[50,0,14,'triangle',[0,3,5,4],0],[51,1,15,'square',[0,4,0,5],1],[52,2,16,'sine',[0,5,1,0],2],[53,3,17,'sawtooth',[0,0,2,1],3],[54,4,10,'triangle',[0,1,3,2],0],[55,0,11,'square',[0,2,4,3],1],[56,1,12,'sine',[0,3,5,4],2],[57,2,13,'sawtooth',[0,4,0,5],3],[58,3,14,'triangle',[0,5,1,0],0],[59,4,15,'square',[0,0,2,1],1],[60,0,16,'sine',[0,1,3,2],2],[61,1,17,'sawtooth',[0,2,4,3],3],[62,2,10,'triangle',[0,3,5,4],0],[63,3,11,'square',[0,4,0,5],1],[64,4,12,'sine',[0,5,1,0],2],[65,0,13,'sawtooth',[0,0,2,1],3],[66,1,14,'triangle',[0,1,3,2],0],[67,2,15,'square',[0,2,4,3],1],[68,3,16,'sine',[0,3,5,4],2],[69,4,17,'sawtooth',[0,4,0,5],3]];
+const TITLE_SEQ=[[196,18,'triangle'],[262,18,'triangle'],[330,18,'triangle'],[392,28,'triangle'],[330,14,'sine'],[349,14,'sine'],[392,28,'triangle'],[523,36,'triangle'],[494,14,'sine'],[440,14,'sine'],[392,22,'triangle'],[349,22,'triangle'],[330,18,'sine'],[294,18,'sine'],[262,40,'triangle'],[0,16],
+[262,14,'square'],[330,14,'square'],[392,14,'square'],[440,28,'triangle'],[392,14,'sine'],[349,14,'sine'],[330,36,'triangle'],[294,18,'sine'],[262,48,'triangle'],[0,24]];
+const CRED_SEQ=[[392,22,'sine'],[440,22,'sine'],[494,28,'triangle'],[523,36,'triangle'],[494,18,'sine'],[440,18,'sine'],[392,28,'triangle'],[349,22,'sine'],[330,22,'sine'],[349,22,'sine'],[392,40,'triangle'],[0,18],
+[330,18,'triangle'],[392,18,'triangle'],[440,24,'sine'],[523,36,'triangle'],[440,20,'sine'],[392,48,'triangle'],[0,28]];
+const CREDITS=["THE LEGEND OF ZELDA","","A Link Between Destiny's","","História:","Pedro Carvalho","","Programação:","Claude, GPT-5.4 Nano","e Pedro Carvalho","","Baseado na franquia","\"The Legend of Zelda\"","","Fan game que se passa","entre Skyward Sword e","Ocarina of Time.","","Todos os direitos","reservados à Nintendo.","","ISSO NÃO É CANON!","","Apenas transformei em","jogo uma teoria","que tenho.","","Obrigado por jogar."];
+const wx=()=>D[S.map][2].w||(S.st&&S.map!=5);
+const ocv=()=>{document.getElementById('oc').style.visibility=oc?'visible':'hidden';document.getElementById('lv').className=S.free?'on':''};
+const fl=t=>{S.tx=t;S.tt=150};
+function rain(on){if(!AC)return;if(on&&!RN){const b=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const n=AC.createBufferSource(),f=AC.createBiquadFilter(),v=AC.createGain();n.buffer=b;n.loop=true;f.type='highpass';f.frequency.value=1800;v.gain.value=.035;n.connect(f);f.connect(v);v.connect(AC.destination);n.start();RN=n}else if(!on&&RN){RN.stop();RN=0}}
+function seqPlay(arr){if(--sqt>0)return;const n=arr[sq%arr.length];sq++;sqt=n[1];if(n[0])sfx(n[0],n[2]||'triangle',n[1]/60*.95,.055)}
+function mus(){if(!AC||oc||mel)return;if(title){if(sqt<=0){sq=0;sqt=1}return seqPlay(TITLE_SEQ)}if(endd){if(sqt<=0){sq=0;sqt=1}return seqPlay(CRED_SEQ)}if(--mt>0)return;const w=!title&&!endd&&wx(),k=TR[w?8:S.map]||TR[0];mt=k[2];const s=ms++,sc=SC[k[1]],n=sc.length,nt=d=>440*2**((k[0]+sc[(d%n+n)%n]+12*Math.floor(d/n)-69)/12),ch=k[4][(s>>3)&3],p=PT[(k[5]+(s>>5))&3],du=k[2]/60;
+if(!(s&3))sfx(nt(ch-n),'triangle',du*4,w?.03:.05);
+if(!w||s%2==0)sfx(nt(ch+p[s&7]),k[3],du*(w?3:1.5),w?.03:.035);
+if(w&&Math.random()<.35)sfx(1800+Math.random()*1800,'sine',.06,.012)}
+function tickTune(){if(!mel)return;if(--melW>0)return;if(melI>=melN.length){const c=melCb;mel=0;melCb=0;c&&c();return}sfx(NF[melN[melI]],'sine',melG/60*1.1,.16);melI++;melW=melG}
+function playTune(notes,gap,cb){mel=1;melN=notes.slice();melI=0;melW=1;melG=gap;melCb=cb;oc=0;ocv()}
+function note(i){sfx(NF[i],'sine',.55,.14);ob.push(i);ot=0;if(ob.length>20)ob.shift();
+if(S.free)return;
+for(const s of SG){
+const full=ob.slice(-s.n.length).join()==s.n.join();
+const part=s.p&&ob.slice(-s.p.length).join()==s.p.join();
+if(full||part){
+if(S.lr==s.id){S.sg[s.id]=1;S.lr=0;ob=[];playTune(s.n,s.gap||28,()=>{say(s.id=='storm'?["Você aprendeu a CANÇÃO DA TEMPESTADE!","Toque a primeira parte ou a completa para chamar/acalmar a chuva."]:s.id=='zelda'?["Você aprendeu a CANÇÃO DE ZELDA!","Os monstros se acalmam ao ouvi-la."]:["Você aprendeu a CANÇÃO DO DESTINO!","Leve-a ao Salão de Ganomisgan e toque-a diante dele."])})}
+else if(S.sg[s.id]||['saria','epona','cura','tempo','sol','forca','protecao','revelar','vento','luz','sombra','vida','guerra'].includes(s.id)){ob=[];song(s)}
+break}}}
+function song(s){
+if(s.slow){if(mel)return;playTune(s.n,s.gap||36,()=>applySong(s));return}
+applySong(s)}
+function applySong(s){
+if(s.id=='cura'){if(S.cd>0)return fl('A magia ainda descansa...');S.hp=Math.min(S.max,S.hp+2);S.cd=900;fl('Canção da Cura: +2 corações!');[523,659,784,1047].forEach((f,i)=>setTimeout(()=>sfx(f,'triangle',.3,.1),i*90))}
+else if(s.id=='storm'){if(S.map==5||D[S.map][2].w)return fl(S.map==5?'Algo impede a tempestade aqui...':'Aqui a chuva nunca para...');S.st=S.st?0:1;rain(!!wx());S.lt=40;sfx(70,'sawtooth',.9,.18,30);fl(S.st?'Canção da Tempestade: a chuva chegou!':'A chuva passou...')}
+else if(s.id=='epona'){say("Está tentando chamar a quem? Acho que está à frente do seu tempo, herói.")}
+else if(s.id=='saria'){S.lf=220;fl('♪ A canção de Saria ecoa pela floresta... ♪')}
+else if(s.id=='zelda'){if(!S.sg.zelda)return fl('As notas ecoam... o templo ainda não as ensinou.');S.cal=900;S.hp=Math.min(S.max,S.hp+1);fl('Canção de Zelda: os monstros se acalmam...')}
+else if(s.id=='tempo'){if(S.cd>0)return fl('A magia ainda descansa...');S.cd=600;S.inv=180;fl('Canção do Tempo: o tempo desacelera... (invulnerável breve)');sfx(200,'sine',.8,.1,80)}
+else if(s.id=='sol'){ents.forEach(e=>{if(e.k=='e'&&e.inv<=0){e.hp-=1;e.inv=30}});fl('Canção do Sol: a luz fere os monstros!');sfx(800,'square',.3,.1);S.lt=30}
+else if(s.id=='forca'){if(S.pow>0)return fl('A força ainda queima em você...');S.pow=600;fl('Canção da Força: seus ataques ficam mais fortes!');sfx(150,'sawtooth',.4,.12,60)}
+else if(s.id=='protecao'){if(S.inv2>0)return fl('A proteção ainda está ativa...');S.inv2=400;fl('Canção da Proteção: escudo mágico!');sfx(400,'triangle',.5,.1)}
+else if(s.id=='revelar'){let found=0;ents.forEach(e=>{if(e.k=='c'&&!S.f[e.id]){found=1;e.revealed=1}});fl(found?'Canção da Revelação: baús ocultos brilham!':'Nada novo para revelar aqui...');S.fx=40;sfx(600,'sine',.4,.1)}
+else if(s.id=='vento'){const warps={0:18,1:2,2:3,3:17,6:7,14:15};const dest=warps[S.map];if(dest!=null){fl('Canção do Vento: você é levado pelo ar!');setTimeout(()=>load(dest,120,80),400);sfx(300,'sine',.6,.12,100)}else fl('O vento sopra, mas não há portal aqui...')}
+else if(s.id=='luz'){S.hp=Math.min(S.max,S.hp+1);S.cal=400;fl('Canção da Luz: cura e acalma!');[523,659,784].forEach((f,i)=>setTimeout(()=>sfx(f,'sine',.25,.1),i*100))}
+else if(s.id=='sombra'){ents.forEach(e=>{if(e.k=='e'||e.k=='e2'||e.k=='e3'||e.k=='e4'){e.vx=0;e.vy=0;e.tm=120}});fl('Canção da Sombra: os monstros congelam de medo!');sfx(100,'sawtooth',.5,.1,40)}
+else if(s.id=='vida'){if(S.cd>0)return fl('A magia ainda descansa...');S.hp=S.max;S.cd=1200;fl('Canção da Vida: vida totalmente restaurada!');[262,330,392,523,659].forEach((f,i)=>setTimeout(()=>sfx(f,'triangle',.3,.1),i*80))}
+else if(s.id=='guerra'){ents.filter(e=>e.k=='e').forEach(e=>hitE(e,1));fl('Canção da Guerra: onda de choque!');sfx(80,'sawtooth',.6,.15,30);S.fx=50}
+else{const B=ents.find(e=>e.k=='B'&&!e.dead);if(!B)return fl('As notas ecoam... nada responde.');if(S.cd2>0)return fl('O Destino ainda se recompõe...');S.cd2=1200;S.fx=90;fl('CANÇÃO DO DESTINO! -15 de vida!');sfx(98,'sawtooth',.8,.15,30);hitE(B,15)}}
+const sh=(x,y,a,v)=>pj.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v});
+const sm=()=>{[[30,30],[190,100]].forEach(([x,y])=>ents.push({k:'e',x,y,inv:0,hp:2,tm:0,vx:0,vy:0}));sfx(90,'sawtooth',.4,.12,50)};
+const blink=e=>{for(let i=0;i<8;i++){const x=24+Math.random()*160,y=24+Math.random()*100;if(Math.hypot(x-px,y-py)>70){e.x=x;e.y=y;break}}sfx(300,'sine',.2,.08,900)};
+function bossAI(e){
+const hr=e.hp/e.mx,ph=hr>.66?0:hr>.33?1:2,sp=[.55,.8,1.05][ph],cx=e.x+12,cy=e.y+12,dx=px+8-cx,dy=py+8-cy,d=Math.hypot(dx,dy)||1;
+e.hc--;e.bk--;
+if(ph>0&&!e.s1){e.s1=1;sm()}if(ph>1&&!e.s2){e.s2=1;sm()}
+if(e.ch>0){if(--e.ch==0){e.hp=Math.min(e.mx,e.hp+10);e.hc=1200;sfx(659,'triangle',.4,.1);setTimeout(()=>sfx(988,'triangle',.5,.1),150)}else if(!(e.ch%20))sfx(300+e.ch*4,'sine',.15,.07)}
+else if(e.dd>0){e.dd--;e.x+=e.vx;e.y+=e.vy}
+else if(e.wu>0){if(--e.wu==0){e.dd=22;e.vx=dx/d*4;e.vy=dy/d*4;sfx(180,'sawtooth',.25,.12,60)}}
+else{
+const w=d>80?1:d<48?-1:0,q=e.sd;
+e.x+=(dx/d*w-dy/d*q*.7)*sp;e.y+=(dy/d*w+dx/d*q*.7)*sp;
+if(!(fr%80)&&Math.random()<.5)e.sd=-e.sd;
+if(atk>0&&d<46&&e.bk<=0){blink(e);e.bk=140}
+if(hr<.5&&e.hc<=0&&d>40){e.ch=100}
+else if(ph>0&&--e.dc<=0&&d<140){e.wu=30;e.dc=[0,260,180][ph]}
+if(--e.sh<=0&&!e.ch){e.sh=[95,70,50][ph];const v=1.7+ph*.3,t=Math.min(d/v,45)*.8,a=Math.atan2(py+8+(py-lpy)*t-cy,px+8+(px-lpx)*t-cx);
+sh(cx,cy,a,v);if(ph){sh(cx,cy,a+.35,v);sh(cx,cy,a-.35,v)}
+if(ph>1&&(e.n2=!e.n2))for(let i=0;i<8;i++)sh(cx,cy,i*Math.PI/4+fr/50,1.3);
+sfx(260,'sawtooth',.1,.07,120)}}
+e.x=Math.max(16,Math.min(200,e.x));e.y=Math.max(16,Math.min(130,e.y));
+if(S.inv<=0&&S.inv2<=0&&ov(px+3,py+6,10,9,e.x,e.y,24,24))hurt(e.x,e.y)}
+function ui(){
+const B=ents.find(e=>e.k=='B'||e.k=='MB');
+if(B){R('#000',50,18,140,6);R(B.ch>0?'#4cff7a':'#d9342b',51,19,138*Math.max(0,B.hp)/B.mx,4)}
+if(S.sg.destino)R('#c070ff',164,4,7,7);
+if(S.cd>0)R('#7fe0a0',130,13,7*S.cd/900,2);if(S.cd2>0)R('#c070ff',154,13,7*S.cd2/1200,2);if(S.pow>0)R('#ff8040',100,13,7*S.pow/600,2);if(S.inv2>0)R('#40a0ff',115,13,7*S.inv2/400,2);
+if(S.fx>0){R('rgba(190,120,255,'+S.fx/90+')',0,0,240,192);S.fx--}if(S.lt>0){R('rgba(255,255,255,'+S.lt/50+')',0,0,240,192);S.lt--}if(S.lf>0){S.lf--;const t=220-S.lf;for(let i=0;i<24;i++)R(i%2?'#5ddf6a':'#2f9a3a',(i*41+t*1.3)%240,(t*(1+i%3)*.9+i*29)%176+16,3,2)}
+if(S.fxs>0){R('rgba(80,140,255,'+S.fxs/16+')',px-2,py-2,20,20);S.fxs--}
+if(oc){const oy=dlg?18:148;R('rgba(0,0,0,.8)',0,oy,240,30);g.font='8px monospace';g.fillStyle=S.free?'#ffd23a':'#8fd0ff';g.fillText((S.free?'LIVRE ':'♪ ')+ob.slice(-10).map(i=>NN[i]).join(' '),6,oy+3);if(S.lr&&!S.free){g.fillStyle='#ffd23a';g.fillText('Repita: '+SG.find(x=>x.id==S.lr).n.map(i=>NN[i]).join(' '),6,oy+15)}}
+if(mel){R('rgba(0,0,0,.7)',0,148,240,28);g.font='8px monospace';g.fillStyle='#8fd0ff';g.fillText('♪ '+melN.slice(0,melI+1).map(i=>NN[i]).join(' '),6,158)}
+if(S.tt>0){S.tt--;R('rgba(0,0,0,.7)',0,178,240,12);g.fillStyle='#ffd23a';g.font='8px monospace';g.textAlign='center';g.fillText(S.tx,120,180);g.textAlign='left'}}
+function upd(){fr++;tickTune();if(title||endd||dlg)return;if(S.inv>0)S.inv--;if(S.inv2>0)S.inv2--;if(S.pow>0)S.pow--;if(S.cd>0)S.cd--;if(S.cd2>0)S.cd2--;if(S.cal>0)S.cal--;S.dt++;if(S.dt>7200){S.dt=0;S.day=S.day?0:1;fl(S.day?'O sol nasce sobre Hyrule...':'A noite cai sobre Hyrule...')}if(oc&&++ot>260)ob=[];
+let dx=(K.right|0)-(K.left|0),dy=(K.down|0)-(K.up|0);moving=0;
+if(atk>0){atk--;const r=[[px+4,py+14,8,12],[px+4,py-10,8,12],[px-10,py+6,12,8],[px+14,py+6,12,8]][dir];
+for(const e of ents)if((e.k=='e'||e.k=='e2'||e.k=='e3'||e.k=='e4'||e.k=='B'||e.k=='MB')&&ov(r[0],r[1],r[2],r[3],e.x,e.y,(e.k=='B'||e.k=='MB')?24:16,(e.k=='B'||e.k=='MB')?24:16))hitE(e,(S.sword?2:1)+(S.pow>0?1:0))}
+else if((dx||dy)&&!oc&&!mel){moving=1;dir=dx?(dx<0?2:3):(dy>0?0:1);const s=1.2;
+const u=pb(px,py);if(dx&&(u||!pb(px+dx*s,py)))px+=dx*s;if(dy&&(u||!pb(px,py+dy*s)))py+=dy*s}
+if(px<-6)go('l');else if(px>W*T-10)go('r');else if(py<-8)go('u');else if(py>H*T-8)go('d');
+for(const e of ents){if(e.inv>0)e.inv--;
+if(e.k=='e'||e.k=='e2'||e.k=='e3'||e.k=='e4'){const dx=px-e.x,dy=py-e.y,d=Math.hypot(dx,dy)||1;
+if(S.cal>0){e.vx=0;e.vy=0}else if(d<70){const sp=S.day?.55:.75;e.vx=dx/d*sp;e.vy=dy/d*sp}else if(--e.tm<0){e.tm=60;e.vx=(Math.random()-.5)*.8;e.vy=(Math.random()-.5)*.8}
+if(!bl(e.x+e.vx+2,e.y+4,12,10))e.x+=e.vx;if(!bl(e.x+2,e.y+e.vy+4,12,10))e.y+=e.vy;
+if(S.inv<=0&&S.inv2<=0&&S.cal<=0&&ov(px+3,py+6,10,9,e.x+2,e.y+4,12,10))hurt(e.x,e.y)}
+else if(e.k=='B'||e.k=='MB')bossAI(e);
+else if(e.k=='r'&&ov(px+3,py+6,10,9,e.x+4,e.y+3,8,10)){e.dead=1;S.ru+=5;sfx(987,'square',.06,.06);setTimeout(()=>sfx(1318,'square',.12,.06),50)}}
+pj=pj.filter(p=>{p.x+=p.vx;p.y+=p.vy;if(S.inv<=0&&ov(px+3,py+6,10,9,p.x-3,p.y-3,6,6)){if(block(p.x,p.y,1))return 0;hurt(p.x-p.vx*3,p.y-p.vy*3);return 0}return p.x>0&&p.x<240&&p.y>0&&p.y<176});
+ents=ents.filter(e=>!e.dead);lpx=px;lpy=py}
+function person(x,y,b,h,d,f){x|=0;y|=0;R('rgba(0,0,0,.25)',x+2,y+13,12,3);R('#7a5230',x+4,y+12,3,3-(f?1:0));R('#7a5230',x+9,y+12,3,f?3:2);
+R(b,x+3,y+7,10,6);R('#8a5a22',x+3,y+10,10,1);R('#f2c9a0',x+3,y+2,10,6);R(h,x+2,y,12,4);
+if(d==0){R('#222',x+5,y+5,2,2);R('#222',x+9,y+5,2,2);R(h,x+2,y+4,2,3);R(h,x+12,y+4,2,3)}
+else if(d==1)R(h,x+2,y,12,8);else{R('#222',x+(d==2?4:10),y+5,2,2);R(h,x+(d==2?9:2),y+2,5,6)}
+if(h==b&&d!=1)R('#3fae3f',x+(d==3?0:10),y,4,3);if(h==b)R('#3a5fd0',x+(d==3?11:1),y+8,4,5)}
+function shieldDraw(){const x=px|0,y=py|0;const p=[[x+4,y+12,8,5],[x+4,y-1,8,5],[x-2,y+4,5,8],[x+13,y+4,5,8]][dir];R('#c4a24a',p[0],p[1],p[2],p[3]);R('#2a4a9a',p[0]+1,p[1]+1,Math.max(1,p[2]-2),Math.max(1,p[3]-2));R('#e8d060',p[0]+(p[2]>p[3]?3:1),p[1]+(p[3]>=p[2]?3:1),2,2)}
+function swordDraw(){const x=px|0,y=py|0;const isSword=!!S.sword;const s=isSword?'#dfe6f0':'#8a5a22';const r=[[x+7,y+15,2,9],[x+7,y-9,2,9],[x-9,y+9,9,2],[x+15,y+9,9,2]][dir];R(s,...r);
+if(isSword){if(dir<2)R('#e8c34a',x+4,dir?y+1:y+14,8,2);else R('#e8c34a',dir==2?x+1:x+13,y+6,2,8)}
+else{if(dir<2)R('#a07030',x+5,dir?y+2:y+15,6,1);else R('#a07030',dir==2?x+2:x+14,y+7,1,6)}}
+function spr(e){const x=e.x|0,y=e.y|0;
+if(e.k=='c'){const o=S.f[e.id];if(e.revealed&&!o)R('rgba(255,220,100,.4)',x-2,y-2,20,20);R('#8a5a22',x+1,y+5,14,10);R('#a87332',x+1,o?y:y+3,14,o?4:5);R(o?'#2a1a0a':'#e8c34a',o?x+2:x+6,o?y+5:y+7,o?12:4,o?4:4)}
+else if(e.k=='n')person(x,y,e.b,e.h,0,0);
+else if(e.k=='e'||e.k=='e2'||e.k=='e3'||e.k=='e4'){const b=(fr>>3)&1;const base=e.col||'#4a9bd9';const col=e.inv>0?'#fff':S.cal>0?'#a0d0ff':base;R('rgba(0,0,0,.25)',x+2,y+13,12,3);R(col,x+1,y+6-b,14,9+b);R(e.inv>0?'#fff':'#8fd0ff',x+3,y+4-b,10,4);R('#222',x+4,y+8,2,3);R('#222',x+10,y+8,2,3);if(e.k!='e')R('#fff',x+6,y+9,4,2)}
+else if(e.k=='MB'){const f=e.inv>0&&fr%4<2;R('#000',x+2,y+20,18,3);R(f?'#fff':(e.col||'#6a2a8a'),x,y+6,20,14);R(f?'#fff':'#8a4aaa',x+2,y+2,16,10);R('#ff4040',x+4,y+8,4,3);R('#ff4040',x+12,y+8,4,3);R('#fff',x+5,y+12,3,3);R('#fff',x+12,y+12,3,3)}
+else if(e.k=='r'){R('#3fd05a',x+5,y+3,6,10);R('#b8ffc6',x+7,y+5,2,3)}
+else if(e.k=='B'){if(e.ch>0)R('rgba(80,255,120,.4)',x-5,y-10,34,38);const f=(e.inv>0&&fr%4<2)||(e.wu>0&&fr%6<3);R('#000',x+2,y+22,20,3);R(f?'#fff':'#3a1f4a',x,y+8,24,16);R(f?'#fff':'#5a3a6a',x+3,y+2,18,12);R('#d9342b',x+1,y-3,22,6);R('#d9342b',x+4,y-6,3,4);R('#d9342b',x+15,y-6,3,4);R('#ffd23a',x+6,y+7,4,3);R('#ffd23a',x+14,y+7,4,3);R('#fff',x+6,y+13,2,4);R('#fff',x+16,y+13,2,4)}}
+function tile(c,x,y,t){const[f,w,d]=TH[t],p=x*T,q=y*T;R(f,p,q,T,T);
+if(c=='.'){if((x*7+y*3)%5==0)R(d,p+4,q+5,2,2);if((x*5+y*11)%7==0)R(d,p+10,q+10,2,2)}
+else if(c==','){R(t==5?'#a02030':'#c9a76a',p,q,T,T);R(t==5?'#d04050':'#b08d52',p+3,q+4,2,2)}
+else if(c=='#'){if(t>0&&t<4||t==14){R('#6b4423',p+6,q+10,4,6);R(w,p+1,q+1,14,11);R('#4fbf5a',p+3,q+3,4,3);R('#145a22',p+9,q+7,4,3)}else{R(w,p,q,T,T);R('#2f3342',p,q+7,T,1);R('#707590',p+1,q+1,6,5);R('#707590',p+8,q+9,6,5)}}
+else if(c=='~'){R('#2f6fd0',p,q,T,T);const o=((fr>>4)&1)*4;R('#8fc0ff',p+2+o,q+5,6,1);R('#8fc0ff',p+6-o,q+11,5,1)}
+else if(c=='H'){R('#b8382c',p,q,T,T);R('#8a2419',p,q+12,T,4);R('#d9594a',p+2,q+3,12,2)}
+else if(c=='h'){R('#e8d9a8',p,q,T,T);R('#5a8fd0',p+4,q+5,8,6);R('#fff',p+4,q+8,8,1)}
+else if(c=='d'){R('#e8d9a8',p,q,T,T);R('#4a2f1a',p+3,q+2,10,14)}}
+function wrap(t,w){const o=[];let l='';for(const s of t.split(' ')){if(g.measureText(l+s).width>w){o.push(l);l=''}l+=s+' '}o.push(l);return o}
+function drawGive(){
+const Z=ents.find(e=>e.t=='Z'),giving=dlg&&/entrega a Ocarina/i.test(dlg.l[dlg.i]);
+if(!Z||!giving)return;
+const t=(fr%80)/80,ox=px+8+(Z.x+8-(px+8))*t,oy=py+(Z.y-(py))*t;
+R('#4fd0d0',ox-3,oy-8,7,6);R('#2a8a8a',ox-2,oy-6,5,3)}
+function drawCredits(){
+R('#05080c',0,0,240,192);
+g.fillStyle='#f0d060';
+const ty=28+Math.min(0,crY*.15);const tri=(x,y,s)=>{g.beginPath();g.moveTo(x,y);g.lineTo(x-s,y+s*1.73);g.lineTo(x+s,y+s*1.73);g.closePath();g.fill()};
+tri(120,ty,14);tri(106,ty+28,14);tri(134,ty+28,14);
+g.textAlign='center';g.font='9px monospace';
+CREDITS.forEach((line,i)=>{const y=crY+i*16;if(y>-12&&y<192){g.fillStyle=i<3?'#f0d060':'#e8f0d0';g.fillText(line,120,y)}});
+if(cs==3)crY-=.28;
+if(crY<-CREDITS.length*16-20)cs=4;
+if(cs==4&&fr%60<40){g.fillStyle='#fff';g.fillText('Aperte A para jogar de novo',120,176)}
+g.textAlign='left'}
+function draw(){g.setTransform(1,0,0,1,0,0);g.textBaseline='top';R('#000',0,0,240,192);
+if(title){g.fillStyle='#f0d060';
+// Triforce
+const tri=(x,y,s)=>{g.beginPath();g.moveTo(x,y);g.lineTo(x-s,y+s*1.73);g.lineTo(x+s,y+s*1.73);g.closePath();g.fill()};
+tri(120,28,18);tri(102,59,18);tri(138,59,18);
+g.textAlign='center';g.font='bold 14px monospace';g.fillText('THE LEGEND OF ZELDA',120,100);g.font='10px monospace';g.fillStyle='#8fd08f';g.fillText("A Link Between Destiny's",120,118);g.fillStyle='#c8d8a8';g.font='8px monospace';g.fillText('Toque para a música',120,140);g.fillStyle='#fff';if(fr%60<40)g.fillText('Aperte A / Espaço',120,158);g.textAlign='left';return}
+if(endd){drawCredits();return}
+g.translate(0,OY);const t=D[S.map][1];
+for(let y=0;y<H;y++)for(let x=0;x<W;x++)tile(G[y][x],x,y,t);
+if(S.map==3){g.fillStyle='#fff';g.font='bold 8px monospace';g.fillText('LOJA',9*T+16,T+4)}
+[...ents].sort((a,b)=>a.y-b.y).forEach(spr);
+if(S.inv<=0||fr%6<3){person(px,py,'#3fae3f','#3fae3f',dir,moving&&(fr>>3)&1);if(S.shd)shieldDraw();if(atk>0)swordDraw()}
+drawGive();
+pj.forEach(p=>R('#c070ff',p.x-3,p.y-3,6,6));
+if(wx()){R('rgba(10,20,60,.3)',0,0,240,176);for(let i=0;i<50;i++)R('#a8c8ff',(i*37+fr*2)%240,(i*91+fr*6)%176,1,5);if(fr%420<4)R('rgba(255,255,255,.35)',0,0,240,176)}if(!S.day&&!title&&!endd){R('rgba(10,15,50,.35)',0,0,240,176);for(let i=0;i<20;i++)R('#ffee88',(i*53+fr/3)%240,(i*37)%160+20,1,1)}
+if(S.ban>0){S.ban--;R('rgba(0,0,0,.6)',0,0,240,12);g.fillStyle='#fff';g.font='8px monospace';g.fillText(D[S.map][0],4,2)}
+g.setTransform(1,0,0,1,0,0);R('#111',0,0,240,16);g.font='10px monospace';
+for(let i=0;i<S.max;i++){g.fillStyle=i<S.hp?'#e83a3a':'#4a2a2a';g.fillText('♥',3+i*10,3)}
+if(S.sword)R('#dfe6f0',120,3,3,9);else if(S.stick){R('#8a5a22',120,3,3,9);R('#a07030',121,4,1,7)}if(S.shd){R('#2a4a9a',127,3,8,9);R('#c4a24a',128,4,6,7)}if(S.oca)R('#4fd0d0',138,4,7,7);if(S.key)R('#e8c34a',148,4,7,7);
+g.fillStyle='#4be06a';g.fillText('◆'+S.ru,175,3);g.fillStyle=S.day?'#ffd060':'#a0b0ff';g.fillText(S.day?'☀':'☾',210,3);
+ui();if(dlg){g.font='8px monospace';const L=wrap(dlg.l[dlg.i],206),last=dlg.i==dlg.l.length-1,n=L.length+(last&&dlg.o?dlg.o.length:0),h=n*10+10,y=186-h;
+R('#fff',5,y-1,230,h+2);R('#101030',6,y,228,h);g.fillStyle='#fff';L.forEach((s,i)=>g.fillText(s,12,y+5+i*10));
+if(last&&dlg.o)dlg.o.forEach((o,i)=>{g.fillStyle=i==dlg.s?'#ffd23a':'#fff';g.fillText((i==dlg.s?'> ':'  ')+o[0],12,y+5+(L.length+i)*10)});
+else if(fr%40<25)g.fillText('▼',224,y+h-10)}}
+const KM={ArrowUp:'up',w:'up',ArrowDown:'down',s:'down',ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right',' ':'A',z:'A',x:'A',Enter:'A',b:'B',o:'B',l:'livre',f:'livre',0:'livre',9:'livre',1:'n0',2:'n1',3:'n2',4:'n3',5:'n4',6:'n5',7:'n6',8:'n7'};
+const kk=e=>KM[e.key.length==1?e.key.toLowerCase():e.key];
+onkeydown=e=>{const a=kk(e);if(a){e.preventDefault();unlock();if(!K[a])edge(a);K[a]=1}};onkeyup=e=>{const a=kk(e);if(a)K[a]=0};
+document.querySelectorAll('b').forEach(b=>{const a=b.dataset.k;b.onpointerdown=e=>{e.preventDefault();unlock();K[a]=1;edge(a)};b.onpointerup=b.onpointerleave=b.onpointercancel=()=>K[a]=0});
+init();setInterval(()=>{mus();upd();draw()},1000/60);
+</script></body></html>
